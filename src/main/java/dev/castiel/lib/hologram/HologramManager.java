@@ -4,6 +4,7 @@ import dev.castiel.lib.util.Placeholders;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -17,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class HologramManager implements Listener {
+    private static final double ACTIVE_RANGE = 56.0;
     private final JavaPlugin plugin;
     private final Map<String, Hologram> holograms = new LinkedHashMap<String, Hologram>();
     private final Map<String, Record> records = new LinkedHashMap<String, Record>();
@@ -34,13 +36,17 @@ public final class HologramManager implements Listener {
     }
 
     public Hologram show(String id, Location base, HologramOptions options, Placeholders placeholders) {
+        return show(id, base, options, placeholders, false);
+    }
+
+    public Hologram show(String id, Location base, HologramOptions options, Placeholders placeholders, boolean force) {
         records.put(id, new Record(base == null ? null : base.clone(), options, placeholders == null ? Placeholders.empty() : placeholders));
         Hologram hologram = holograms.get(id);
         if (hologram == null) {
             hologram = new Hologram(plugin, id);
             holograms.put(id, hologram);
         }
-        refresh(id, false);
+        refresh(id, force);
         return hologram;
     }
 
@@ -150,6 +156,12 @@ public final class HologramManager implements Listener {
             hologram = new Hologram(plugin, id);
             holograms.put(id, hologram);
         }
+        if (!hasNearbyViewer(record.base)) {
+            if (hologram.hasLiveEntities()) {
+                hologram.remove();
+            }
+            return;
+        }
         if (force || !hologram.hasLiveEntities()) {
             hologram.spawn(record.base, record.options, record.placeholders);
         }
@@ -160,6 +172,22 @@ public final class HologramManager implements Listener {
             return false;
         }
         return location.getWorld().isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4);
+    }
+
+    private boolean hasNearbyViewer(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return false;
+        }
+        double rangeSquared = ACTIVE_RANGE * ACTIVE_RANGE;
+        for (Player player : location.getWorld().getPlayers()) {
+            if (!player.isOnline() || player.isDead()) {
+                continue;
+            }
+            if (player.getLocation().distanceSquared(location) <= rangeSquared) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static final class Record {

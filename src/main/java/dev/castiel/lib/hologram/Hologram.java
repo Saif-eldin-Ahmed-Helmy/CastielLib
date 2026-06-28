@@ -76,7 +76,7 @@ public final class Hologram {
             invokeOptional(entity, "setPersistent", new Class<?>[]{boolean.class}, new Object[]{Boolean.FALSE});
             invokeOptional(entity, "setGravity", new Class<?>[]{boolean.class}, new Object[]{Boolean.FALSE});
             invokeOptional(entity, "setInvulnerable", new Class<?>[]{boolean.class}, new Object[]{Boolean.TRUE});
-            invokeOptional(entity, "setViewRange", new Class<?>[]{float.class}, new Object[]{Float.valueOf(48f)});
+            invokeOptional(entity, "setViewRange", new Class<?>[]{float.class}, new Object[]{Float.valueOf(96f)});
             setBillboard(entity);
             setScale(entity, scale);
             return entity;

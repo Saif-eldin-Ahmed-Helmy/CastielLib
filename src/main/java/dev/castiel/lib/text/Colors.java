@@ -72,7 +72,8 @@ public final class Colors {
         StringBuffer out = new StringBuffer();
         while (matcher.find()) {
             float saturation = parseRainbowSaturation(matcher.group(1), matcher.group(2));
-            matcher.appendReplacement(out, Matcher.quoteReplacement(rainbow(matcher.group(3), saturation)));
+            String content = inheritFormatting(input, matcher.start(), matcher.group(3));
+            matcher.appendReplacement(out, Matcher.quoteReplacement(rainbow(content, saturation)));
         }
         matcher.appendTail(out);
         return out.toString();
@@ -87,7 +88,8 @@ public final class Colors {
             if (from == null || to == null) {
                 matcher.appendReplacement(out, Matcher.quoteReplacement(matcher.group(2)));
             } else {
-                matcher.appendReplacement(out, Matcher.quoteReplacement(gradient(matcher.group(2), from, to)));
+                String content = inheritFormatting(input, matcher.start(), matcher.group(2));
+                matcher.appendReplacement(out, Matcher.quoteReplacement(gradient(content, from, to)));
             }
         }
         matcher.appendTail(out);
@@ -99,7 +101,8 @@ public final class Colors {
         StringBuffer out = new StringBuffer();
         while (matcher.find()) {
             Color color = parseColor(matcher.group(1));
-            String replacement = color == null ? matcher.group(2) : solid(matcher.group(2), color);
+            String content = inheritFormatting(input, matcher.start(), matcher.group(2));
+            String replacement = color == null ? matcher.group(2) : solid(content, color);
             matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(out);
@@ -168,9 +171,9 @@ public final class Colors {
             char current = text.charAt(i);
             if (isLegacyCode(text, i)) {
                 char code = text.charAt(i + 1);
-                if (code == 'r' || code == 'R') {
+                if (isResetOrLegacyColor(code)) {
                     activeFormatting.setLength(0);
-                } else {
+                } else if (!containsFormatting(activeFormatting, code)) {
                     activeFormatting.append(current).append(code);
                 }
                 i++;
@@ -199,6 +202,43 @@ public final class Colors {
 
     private static boolean isColorCode(char code) {
         return "0123456789AaBbCcDdEeFfKkLlMmNnOoRr".indexOf(code) >= 0;
+    }
+
+    private static String inheritFormatting(String input, int endIndex, String content) {
+        String formatting = activeFormatting(input, endIndex);
+        return formatting.isEmpty() ? content : formatting + content;
+    }
+
+    private static String activeFormatting(String input, int endIndex) {
+        StringBuilder formatting = new StringBuilder();
+        for (int i = 0; i < endIndex; i++) {
+            if (!isLegacyCode(input, i)) {
+                continue;
+            }
+            char marker = input.charAt(i);
+            char code = input.charAt(++i);
+            if (isResetOrLegacyColor(code)) {
+                formatting.setLength(0);
+            } else if (!containsFormatting(formatting, code)) {
+                formatting.append(marker).append(code);
+            }
+        }
+        return formatting.toString();
+    }
+
+    private static boolean isResetOrLegacyColor(char code) {
+        char normalized = Character.toLowerCase(code);
+        return normalized == 'r' || "0123456789abcdef".indexOf(normalized) >= 0;
+    }
+
+    private static boolean containsFormatting(StringBuilder formatting, char code) {
+        char normalized = Character.toLowerCase(code);
+        for (int i = 1; i < formatting.length(); i += 2) {
+            if (Character.toLowerCase(formatting.charAt(i)) == normalized) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Color parseColor(String raw) {

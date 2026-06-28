@@ -55,4 +55,14 @@ Locations:
 String key = Locations.blockKey(block);      // world:x:y:z
 String chunk = Locations.chunkKey(location); // world:x:z
 Location parsed = Locations.parseBlockKey(key);
+String keyed = Locations.keyedPrecise(location);       // namespace:key:x:y:z:yaw:pitch where available
+Location parsedKeyed = Locations.parseFlexiblePrecise(keyed);
+```
+
+PDC string helpers:
+
+```java
+NamespacedKey key = PdcTags.key(plugin, "example_id");
+PdcTags.setString(entity, key, "value");
+String value = PdcTags.getString(itemMeta, key);
 ```
