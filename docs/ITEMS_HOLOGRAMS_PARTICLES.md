@@ -8,3 +8,9 @@ CustomCrate extends CastielLib with three reusable utility areas:
 - `dev.castiel.lib.effects.ParticleEffectEngine` renders reusable scheduled particle animations around fixed world locations.
 
 These APIs intentionally keep modern Minecraft calls reflective where practical so plugins can compile against an older Paper API while still using newer runtime features on current servers.
+
+Holograms can be updated in place by forcing a respawn under the same id:
+
+```java
+lib.holograms().show("boss:live", location, options, placeholders, true);
+```

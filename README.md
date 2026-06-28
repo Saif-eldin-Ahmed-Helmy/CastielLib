@@ -928,9 +928,11 @@ String blockKey = Locations.blockKey(block);       // world:x:y:z
 String blockKey2 = Locations.blockKey(location);   // world:x:y:z
 String chunkKey = Locations.chunkKey(location);    // world:x:z
 String precise = Locations.precise(location);      // world:x:y:z:yaw:pitch
+String keyed = Locations.keyedPrecise(location);   // namespace:key:x:y:z:yaw:pitch where available
 
 Location blockLocation = Locations.parseBlockKey(blockKey);
 Location preciseLocation = Locations.parsePrecise(precise);
+Location flexible = Locations.parseFlexiblePrecise(keyed);
 ```
 
 These helpers are useful for crate locations, protected blocks, crop chunks, shop blocks, and serialized world positions.
