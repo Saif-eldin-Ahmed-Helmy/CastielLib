@@ -1,6 +1,36 @@
 .gradle
 **/build/
 !src/**/build/
+.devagent/
+.agents/
+.codex/
+.gemini/
+.config/
+.claudeignore
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+oauth_creds.json
+auth.json
+.idea/
+.vscode/
+*.iml
+*.log
+logs/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+node_modules/
+dist/
+out/
+target/
+__pycache__/
+*.pyc
+*.class
 
 # Ignore Gradle GUI config
 gradle-app.setting
