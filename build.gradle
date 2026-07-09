@@ -17,6 +17,9 @@ dependencies {
     compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
     api "com.zaxxer:HikariCP:4.0.3"
     api "com.github.cryptomorin:XSeries:13.7.0"
+    testImplementation "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 configurations.configureEach {
@@ -28,6 +31,10 @@ tasks.withType(JavaCompile).configureEach {
     if (JavaVersion.current().isJava9Compatible()) {
         options.release.set(8)
     }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 shadowJar {

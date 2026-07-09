@@ -7,6 +7,7 @@ import dev.castiel.lib.database.DatabaseManager;
 import dev.castiel.lib.effects.ParticleEffectEngine;
 import dev.castiel.lib.hologram.HologramManager;
 import dev.castiel.lib.inventory.InventoryManager;
+import dev.castiel.lib.models.VanillaModelManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
@@ -19,6 +20,7 @@ public final class CastielLib {
     private final CommandRegistry commands;
     private final ParticleEffectEngine particles;
     private final HologramManager holograms;
+    private final VanillaModelManager models;
     private DatabaseManager database;
 
     private CastielLib(JavaPlugin plugin) {
@@ -29,6 +31,7 @@ public final class CastielLib {
         this.commands = new CommandRegistry(plugin);
         this.particles = new ParticleEffectEngine(plugin);
         this.holograms = new HologramManager(plugin);
+        this.models = new VanillaModelManager(plugin);
     }
 
     public static CastielLib bind(JavaPlugin plugin) {
@@ -61,6 +64,14 @@ public final class CastielLib {
 
     public HologramManager holograms() {
         return holograms;
+    }
+
+    /**
+     * Returns the vanilla-only model manager for Display-entity models and
+     * explicit ArmorStand fallback on old servers.
+     */
+    public VanillaModelManager models() {
+        return models;
     }
 
     public DatabaseManager database() {
