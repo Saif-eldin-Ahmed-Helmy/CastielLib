@@ -15,6 +15,7 @@ Modules:
 - `dev.castiel.lib.commands`: reflection command map registration with `@Command`, `@SubCommand`, `@Permission`, and simple argument binding.
 - `dev.castiel.lib.text`: legacy, hex, solid, gradient, and rainbow color resolver with Iridium-style tags.
 - `dev.castiel.lib.sounds`: XSeries-backed sound resolver for legacy and modern Bukkit sound names.
+- `dev.castiel.lib.models`: vanilla-only Display entity custom models with explicit ArmorStand fallback and loaders for CustomMobs, Treasure, and Blockbench cube geometry.
 - `dev.castiel.lib.permissions`: wildcard/admin-aware permission helpers and numbered permission limits.
 - `dev.castiel.lib.requirements`: config-friendly requirement checks for permissions, worlds, gamemodes, op status, and placeholder comparisons.
 - `dev.castiel.lib.random`: weighted selection for crates, rotating shops, loot, and rarity rolls.

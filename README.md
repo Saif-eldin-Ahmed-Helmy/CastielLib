@@ -17,6 +17,7 @@ The library is designed for plugin code that needs to stay practical across olde
 - Configurable item stacks with XSeries material parsing, custom model data, lore, glow, and base64/url player heads.
 - XSeries-backed sound helper.
 - Holograms using TextDisplay when available and ArmorStand fallback otherwise.
+- Vanilla model loading for Display-entity props/mobs with explicit ArmorStand fallback on old servers.
 - Scheduled particle effect engine with many built-in shapes/styles.
 - Utility packages for permissions, requirements, weighted random selection, time, inventory math, slots, block styles, and location keys.
 
@@ -128,6 +129,7 @@ lib.inventories(); // InventoryManager
 lib.commands();    // CommandRegistry
 lib.particles();   // ParticleEffectEngine
 lib.holograms();   // HologramManager
+lib.models();      // VanillaModelManager
 lib.database();    // DatabaseManager after configuration
 ```
 
@@ -1151,6 +1153,7 @@ Additional module docs are available in `docs/`:
 - `docs/COMMANDS.md`
 - `docs/INVENTORIES.md`
 - `docs/ITEMS_HOLOGRAMS_PARTICLES.md`
+- `docs/MODELS.md`
 - `docs/UTILITIES.md`
 - `ARCHITECTURE.md`
 
