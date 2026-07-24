@@ -285,8 +285,8 @@ public final class Colors {
         return closestLegacyColor(color).toString();
     }
 
-    private static float parseRainbowSaturation(String iridiumValue, String castielValue) {
-        String raw = castielValue != null ? castielValue : iridiumValue;
+    private static float parseRainbowSaturation(String percentageValue, String castielValue) {
+        String raw = castielValue != null ? castielValue : percentageValue;
         if (raw == null || raw.trim().isEmpty()) {
             return 1.0f;
         }

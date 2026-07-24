@@ -13,7 +13,7 @@ Modules:
 - `dev.castiel.lib.actions`: config string action parser. Built-ins: `{console}`, `{player}`, `{message}`, `{broadcast}`, `{title}`, `{action}`, `{sound}`, `{close}`, `{particle}`.
 - `dev.castiel.lib.inventory`: YAML menu builder with static decoration items, dynamic items, placeholders, click actions, custom model data, glow flags, and arbitrary extra YAML sections left available to plugin-specific code.
 - `dev.castiel.lib.commands`: reflection command map registration with `@Command`, `@SubCommand`, `@Permission`, and simple argument binding.
-- `dev.castiel.lib.text`: legacy, hex, solid, gradient, and rainbow color resolver with Iridium-style tags.
+- `dev.castiel.lib.text`: legacy, hex, solid, gradient, and rainbow color resolver with CastielLib-owned compatibility tags.
 - `dev.castiel.lib.sounds`: XSeries-backed sound resolver for legacy and modern Bukkit sound names.
 - `dev.castiel.lib.models`: vanilla-only Display entity custom models with explicit ArmorStand fallback and loaders for CustomMobs, Treasure, and Blockbench cube geometry.
 - `dev.castiel.lib.permissions`: wildcard/admin-aware permission helpers and numbered permission limits.

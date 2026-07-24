@@ -14,7 +14,7 @@ Supported syntax:
 - Bold gradient: `<GRADIENT:00FFFF>&lBold gradient</GRADIENT:ADD8E6>`
 - Rainbow: `<RAINBOW>Rainbow text</RAINBOW>`
 - Rainbow saturation: `<RAINBOW:0.75>Soft rainbow</RAINBOW>`
-- Iridium rainbow syntax: `<RAINBOW75>Soft rainbow</RAINBOW>`
+- Percentage rainbow syntax: `<RAINBOW75>Soft rainbow</RAINBOW>`
 
 Color names are intentionally small and stable: `WHITE`, `BLACK`, `RED`, `GREEN`, `BLUE`, `YELLOW`, `CYAN`, `AQUA`, `MAGENTA`, `PINK`, `ORANGE`, `GOLD`, `GRAY`, `GREY`, `DARK_GRAY`, `DARK_GREY`.
 
