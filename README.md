@@ -11,7 +11,7 @@ The library is designed for plugin code that needs to stay practical across olde
 - Initializable global no-permission message for all `@Permission` checks.
 - Annotation-backed YAML config loading with automatic missing-key insertion.
 - HikariCP-backed SQLite/MySQL access with all work scheduled asynchronously through Bukkit.
-- Iridium-style colors: legacy codes, hex, `<SOLID>`, `<GRADIENT>`, and `<RAINBOW>`.
+- CastielLib colors: legacy codes, hex, `<SOLID>`, `<GRADIENT>`, and `<RAINBOW>`.
 - Config action parser for commands, messages, broadcasts, titles, action bars, sounds, particles, and custom tags.
 - YAML inventory parser plus programmatic managed and paginated menus.
 - Configurable item stacks with XSeries material parsing, custom model data, lore, glow, and base64/url player heads.
@@ -401,7 +401,7 @@ Supported syntax:
 - `<GRADIENT:FROM>text</GRADIENT:TO>`.
 - `<RAINBOW>text</RAINBOW>`.
 - `<RAINBOW:0.75>text</RAINBOW>`.
-- Iridium-style `<RAINBOW75>text</RAINBOW>` saturation.
+- Percentage-style `<RAINBOW75>text</RAINBOW>` saturation.
 
 Named colors include:
 
