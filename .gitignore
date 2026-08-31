@@ -1,7 +1,10 @@
 .gradle
 **/build/
 !src/**/build/
-.devagent/
+# Local agent state is private; durable workflow plans are project artifacts.
+.devagent/*
+!.devagent/work/
+!.devagent/work/**
 .agents/
 .codex/
 .gemini/
