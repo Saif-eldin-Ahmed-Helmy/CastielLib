@@ -58,6 +58,7 @@ public final class InventoryManager implements Listener {
     /**
      * Marks a custom inventory as protected by this manager's shutdown handling.
      * CastielLib menus are recognized by their holders and need no registration.
+     * Call on the server thread.
      */
     public void protect(Inventory inventory) {
         if (inventory != null) {
@@ -65,7 +66,7 @@ public final class InventoryManager implements Listener {
         }
     }
 
-    /** Removes a custom inventory from shutdown handling. */
+    /** Removes a custom inventory from shutdown handling. Call on the server thread. */
     public void unprotect(Inventory inventory) {
         if (inventory != null) {
             protectedInventories.remove(inventory);
@@ -78,26 +79,29 @@ public final class InventoryManager implements Listener {
      */
     public void closeOpenMenus() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
-            Inventory top = null;
             try {
-                top = player.getOpenInventory().getTopInventory();
-                if (isProtected(top)) {
-                    player.closeInventory();
-                }
+                closeProtectedView(protectedInventories, new ViewControl() {
+                    @Override
+                    public Inventory topInventory() {
+                        return player.getOpenInventory().getTopInventory();
+                    }
+
+                    @Override
+                    public void close() {
+                        player.closeInventory();
+                    }
+                });
             } catch (Throwable closeFailure) {
                 plugin.getLogger().log(Level.WARNING,
                         "Could not close a protected inventory during shutdown", closeFailure);
-                if (top != null && isProtected(top)) {
-                    try {
-                        top.clear();
-                    } catch (Throwable clearFailure) {
-                        plugin.getLogger().log(Level.SEVERE,
-                                "Could not make a protected inventory safe during shutdown", clearFailure);
-                    }
-                }
             }
         }
-        protectedInventories.clear();
+        try {
+            protectedInventories.clearRegisteredContents();
+        } catch (Throwable clearFailure) {
+            plugin.getLogger().log(Level.SEVERE,
+                    "Could not make every protected inventory safe during shutdown", clearFailure);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -112,6 +116,31 @@ public final class InventoryManager implements Listener {
             return false;
         }
         return protectedInventories.contains(inventory);
+    }
+
+    static void closeProtectedView(ProtectionRegistry registry, ViewControl view) {
+        Inventory top;
+        try {
+            top = view.topInventory();
+        } catch (Throwable lookupFailure) {
+            // We cannot classify the view, so closing it is the only safe fallback.
+            view.close();
+            return;
+        }
+        if (!registry.contains(top)) {
+            return;
+        }
+        try {
+            view.close();
+        } catch (Throwable closeFailure) {
+            top.clear();
+        }
+    }
+
+    interface ViewControl {
+        Inventory topInventory();
+
+        void close();
     }
 
     static final class ProtectionRegistry {
@@ -135,8 +164,21 @@ public final class InventoryManager implements Listener {
                     || inventories.contains(inventory);
         }
 
-        void clear() {
+        void clearRegisteredContents() {
+            Throwable firstFailure = null;
+            for (Inventory inventory : new java.util.ArrayList<Inventory>(inventories)) {
+                try {
+                    inventory.clear();
+                } catch (Throwable failure) {
+                    if (firstFailure == null) {
+                        firstFailure = failure;
+                    }
+                }
+            }
             inventories.clear();
+            if (firstFailure != null) {
+                throw new IllegalStateException("Could not clear a protected inventory", firstFailure);
+            }
         }
     }
 
