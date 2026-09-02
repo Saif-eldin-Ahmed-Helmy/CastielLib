@@ -16,6 +16,7 @@ java {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:26.2.build.62-beta"
+    implementation "org.yaml:snakeyaml:2.6"
     api "com.zaxxer:HikariCP:4.0.3"
     api "com.github.cryptomorin:XSeries:13.7.1"
     testImplementation "io.papermc.paper:paper-api:26.2.build.62-beta"
@@ -39,4 +40,5 @@ test {
 shadowJar {
     archiveClassifier.set("")
     relocate "com.zaxxer.hikari", "dev.castiel.lib.libs.hikari"
+    relocate "org.yaml.snakeyaml", "dev.castiel.lib.libs.snakeyaml"
 }
