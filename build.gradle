@@ -1,3 +1,5 @@
+import org.gradle.api.attributes.Attribute
+
 plugins {
     id "java-library"
     id "com.gradleup.shadow" version "9.6.0"
@@ -14,6 +16,13 @@ java {
     withJavadocJar()
 }
 
+configurations {
+    spigot18Linkage {
+        canBeConsumed = false
+        extendsFrom implementation, runtimeOnly
+    }
+}
+
 dependencies {
     compileOnly "io.papermc.paper:paper-api:26.2.build.62-beta"
     implementation "org.yaml:snakeyaml:2.6"
@@ -22,6 +31,7 @@ dependencies {
     testImplementation "io.papermc.paper:paper-api:26.2.build.62-beta"
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    spigot18Linkage "org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT"
 }
 
 configurations.configureEach {
@@ -30,11 +40,55 @@ configurations.configureEach {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    options.release.set(25)
+    options.release.set(8)
+}
+
+configurations.named("compileClasspath") {
+    attributes {
+        attribute(Attribute.of("org.gradle.jvm.version", Integer), 25)
+    }
+}
+
+configurations.named("testCompileClasspath") {
+    attributes {
+        attribute(Attribute.of("org.gradle.jvm.version", Integer), 25)
+    }
+}
+
+configurations.named("testRuntimeClasspath") {
+    attributes {
+        attribute(Attribute.of("org.gradle.jvm.version", Integer), 25)
+    }
 }
 
 test {
     useJUnitPlatform()
+    systemProperty "castiellib.main.classes", sourceSets.main.output.classesDirs.asPath
+    systemProperty "castiellib.spigot18.classpath", configurations.spigot18Linkage.asPath
+}
+
+tasks.register("verifyJava8Bytecode") {
+    dependsOn tasks.named("classes"), tasks.named("testClasses")
+    doLast {
+        FileCollection outputs = files(sourceSets.main.output.classesDirs, sourceSets.test.output.classesDirs)
+        outputs.asFileTree.matching { include "**/*.class" }.files.each { File classFile ->
+            byte[] header = classFile.bytes
+            if (header.length >= 8) {
+                int major = ((header[6] & 0xff) << 8) | (header[7] & 0xff)
+                if (major > 52) {
+                    throw new GradleException("Java 8 bytecode check failed for ${classFile}: major ${major}")
+                }
+            }
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("verifyJava8Bytecode")
+}
+
+jar {
+    archiveClassifier.set("plain")
 }
 
 shadowJar {
