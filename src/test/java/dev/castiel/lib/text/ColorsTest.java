@@ -22,6 +22,19 @@ class ColorsTest {
     }
 
     @Test
+    void supportsBareHexColorsBeforeHexadecimalText() {
+        String result = Colors.color("#000000Black");
+
+        assertEquals("Black", ChatColor.stripColor(result));
+        assertTrue(result.startsWith("\u00a7x\u00a70\u00a70\u00a70\u00a70\u00a70\u00a70"));
+    }
+
+    @Test
+    void preservesMiniMessageHexTags() {
+        assertEquals("<#00F5FF>Hex", Colors.color("<#00F5FF>Hex"));
+    }
+
+    @Test
     void supportsSolidColors() {
         String result = Colors.color("<SOLID:00F5FF>Solid</SOLID>");
 

@@ -6,11 +6,13 @@ import dev.castiel.lib.config.ConfigManager;
 import dev.castiel.lib.database.DatabaseManager;
 import dev.castiel.lib.effects.ParticleEffectEngine;
 import dev.castiel.lib.hologram.HologramManager;
+import dev.castiel.lib.hologram.HologramsAPI;
 import dev.castiel.lib.inventory.InventoryManager;
 import dev.castiel.lib.models.VanillaModelManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public final class CastielLib {
     private final JavaPlugin plugin;
@@ -20,6 +22,7 @@ public final class CastielLib {
     private final CommandRegistry commands;
     private final ParticleEffectEngine particles;
     private final HologramManager holograms;
+    private final HologramsAPI hologramsApi;
     private final VanillaModelManager models;
     private DatabaseManager database;
 
@@ -31,6 +34,7 @@ public final class CastielLib {
         this.commands = new CommandRegistry(plugin);
         this.particles = new ParticleEffectEngine(plugin);
         this.holograms = new HologramManager(plugin);
+        this.hologramsApi = new HologramsAPI(plugin, holograms);
         this.models = new VanillaModelManager(plugin);
     }
 
@@ -66,6 +70,10 @@ public final class CastielLib {
         return holograms;
     }
 
+    public HologramsAPI hologramsApi() {
+        return hologramsApi;
+    }
+
     /**
      * Returns the vanilla-only model manager for Display-entity models and
      * explicit ArmorStand fallback on old servers.
@@ -87,10 +95,17 @@ public final class CastielLib {
     }
 
     public void shutdown() {
+        shutdown(5, TimeUnit.SECONDS);
+    }
+
+    /** Stops library services and drains database work for a bounded interval. */
+    public boolean shutdown(long timeout, TimeUnit unit) {
         particles.stop();
         holograms.shutdown();
+        hologramsApi.shutdown();
         if (database != null) {
-            database.close();
+            return database.close(timeout, unit);
         }
+        return true;
     }
 }

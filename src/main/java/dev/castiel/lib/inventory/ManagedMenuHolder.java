@@ -25,6 +25,12 @@ public final class ManagedMenuHolder implements InventoryHolder {
         buttons.put(slot, button);
     }
 
+    public void setItem(int slot, org.bukkit.inventory.ItemStack item) {
+        if (inventory != null && slot >= 0 && slot < inventory.getSize()) {
+            inventory.setItem(slot, item);
+        }
+    }
+
     public String menuId() {
         return menuId;
     }
