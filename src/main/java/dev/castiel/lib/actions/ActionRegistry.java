@@ -22,8 +22,8 @@ public final class ActionRegistry {
 
     public static ActionRegistry defaults(JavaPlugin plugin) {
         ActionRegistry registry = new ActionRegistry(plugin);
-        registry.register("console", (ctx, payload) -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), apply(ctx, payload)));
-        registry.register("player", (ctx, payload) -> Bukkit.dispatchCommand(ctx.player, apply(ctx, payload)));
+        registry.register("console", (ctx, payload) -> requireDispatched(Bukkit.dispatchCommand(Bukkit.getConsoleSender(), apply(ctx, payload)), payload));
+        registry.register("player", (ctx, payload) -> requireDispatched(Bukkit.dispatchCommand(ctx.player, apply(ctx, payload)), payload));
         registry.register("message", (ctx, payload) -> ctx.player.sendMessage(Colors.color(apply(ctx, payload))));
         registry.register("broadcast", (ctx, payload) -> Bukkit.broadcastMessage(Colors.color(apply(ctx, payload))));
         registry.register("title", ActionRegistry::title);
@@ -40,10 +40,26 @@ public final class ActionRegistry {
     }
 
     public void run(Player player, List<String> actions, dev.castiel.lib.util.Placeholders placeholders) {
+        runChecked(player, actions, placeholders);
+    }
+
+    /** Executes a sequence and reports malformed, unsupported, or failed actions. */
+    public ActionRunResult runChecked(Player player, List<String> actions, dev.castiel.lib.util.Placeholders placeholders) {
+        if (player == null) return ActionRunResult.failure("Player is missing");
         ActionContext context = new ActionContext(plugin, player, placeholders);
+        if (actions == null || actions.isEmpty()) return ActionRunResult.failure("Action sequence is empty");
         for (String action : actions) {
-            run(context, action);
+            String validation = validate(action);
+            if (validation != null) return ActionRunResult.failure(validation);
         }
+        for (String action : actions) {
+            try {
+                run(context, action);
+            } catch (RuntimeException failure) {
+                return ActionRunResult.failure("Action failed: " + failure.getMessage());
+            }
+        }
+        return ActionRunResult.success();
     }
 
     public void run(ActionContext context, String raw) {
@@ -60,6 +76,18 @@ public final class ActionRegistry {
         if (handler != null) {
             handler.execute(context, payload);
         }
+    }
+
+    private String validate(String raw) {
+        if (raw == null || !raw.startsWith("{")) return "Malformed action: " + raw;
+        int close = raw.indexOf('}');
+        if (close <= 1) return "Malformed action: " + raw;
+        String tag = raw.substring(1, close).toLowerCase(Locale.ROOT);
+        return handlers.containsKey(tag) ? null : "Unsupported action tag: " + tag;
+    }
+
+    private static void requireDispatched(boolean dispatched, String payload) {
+        if (!dispatched) throw new IllegalStateException("Command was rejected: " + payload);
     }
 
     private static String apply(ActionContext ctx, String payload) {

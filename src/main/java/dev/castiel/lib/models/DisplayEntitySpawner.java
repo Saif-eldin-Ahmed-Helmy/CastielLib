@@ -2,7 +2,6 @@ package dev.castiel.lib.models;
 
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 
@@ -51,9 +50,9 @@ final class DisplayEntitySpawner {
     }
 
     private static void configureCommon(Entity entity, ModelSpawnOptions options) {
-        entity.setGravity(false);
-        entity.setSilent(true);
-        entity.setInvulnerable(true);
+        invokeCompatible(entity, "setGravity", Boolean.FALSE);
+        invokeCompatible(entity, "setSilent", Boolean.TRUE);
+        invokeCompatible(entity, "setInvulnerable", Boolean.TRUE);
         invoke(entity, "setPersistent", new Class<?>[]{boolean.class}, options.persistent());
         invoke(entity, "setInterpolationDelay", new Class<?>[]{int.class}, 0);
         invoke(entity, "setInterpolationDuration", new Class<?>[]{int.class}, options.interpolationDuration());
@@ -70,8 +69,12 @@ final class DisplayEntitySpawner {
             setItemTransform(entity);
             return;
         }
-        BlockData data = part.material().createBlockData();
-        invoke(entity, "setBlock", new Class<?>[]{BlockData.class}, data);
+        try {
+            Object data = part.material().getClass().getMethod("createBlockData").invoke(part.material());
+            invokeCompatible(entity, "setBlock", data);
+        } catch (ReflectiveOperationException ignored) {
+            throw new UnsupportedOperationException("Block display data is unavailable.");
+        }
     }
 
     private static void setBillboard(Entity entity) {
@@ -128,6 +131,19 @@ final class DisplayEntitySpawner {
         try {
             target.getClass().getMethod(name, types).invoke(target, values);
         } catch (ReflectiveOperationException ignored) {
+        }
+    }
+
+    private static void invokeCompatible(Object target, String name, Object value) {
+        for (Method method : target.getClass().getMethods()) {
+            if (!name.equals(method.getName()) || method.getParameterTypes().length != 1
+                    || value == null || !method.getParameterTypes()[0].isAssignableFrom(value.getClass())) continue;
+            try {
+                method.invoke(target, value);
+                return;
+            } catch (ReflectiveOperationException ignored) {
+                return;
+            }
         }
     }
 

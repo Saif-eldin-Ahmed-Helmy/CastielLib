@@ -14,7 +14,7 @@ public final class Colors {
     private static final Pattern CLOSE_NO_BRACKET = Pattern.compile("(?i)(?<!<)/GRADIENT:");
     private static final Pattern CLOSE_MISSING_GT = Pattern.compile("(?i)</GRADIENT:([0-9a-f]{6})(?![A-Za-z0-9_#>])");
     private static final Pattern BROKEN_CLOSE = Pattern.compile("(?i)</<GRADIENT:([A-Za-z0-9_#]{3,32})>");
-    private static final Pattern HEX = Pattern.compile("&#([A-Fa-f0-9]{6})|#\\{([A-Fa-f0-9]{6})}");
+    private static final Pattern HEX = Pattern.compile("&#([A-Fa-f0-9]{6})|(?<![<&])#([A-Fa-f0-9]{6})|#\\{([A-Fa-f0-9]{6})}");
     private static final Pattern SOLID = Pattern.compile("<SOLID:([A-Za-z0-9_#]{3,32})>(.*?)</SOLID(?::\\1)?>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern SOLID_INSERT = Pattern.compile("<SOLID:#?([A-Fa-f0-9]{6})>", Pattern.CASE_INSENSITIVE);
     private static final Pattern GRADIENT = Pattern.compile("<GRADIENT:([A-Za-z0-9_#]{3,32})>(.*?)</GRADIENT:([A-Za-z0-9_#]{3,32})>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -123,7 +123,9 @@ public final class Colors {
         Matcher matcher = HEX.matcher(input);
         StringBuffer out = new StringBuffer();
         while (matcher.find()) {
-            String color = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+            String color = matcher.group(1) != null ? matcher.group(1)
+                         : matcher.group(2) != null ? matcher.group(2)
+                         : matcher.group(3);
             matcher.appendReplacement(out, Matcher.quoteReplacement(hex(color)));
         }
         matcher.appendTail(out);

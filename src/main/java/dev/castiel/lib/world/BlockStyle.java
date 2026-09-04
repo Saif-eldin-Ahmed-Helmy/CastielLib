@@ -7,9 +7,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Directional;
-import org.bukkit.block.data.Rotatable;
 import org.bukkit.configuration.ConfigurationSection;
 
 public final class BlockStyle {
@@ -49,7 +46,7 @@ public final class BlockStyle {
             applyHead(block, facing);
             return;
         }
-        block.setType(ItemStacks.resolveMaterial(material, Material.CHEST), false);
+        block.setType(ItemStacks.resolveMaterial(material, Material.CHEST));
         orient(block, facing);
     }
 
@@ -58,7 +55,7 @@ public final class BlockStyle {
     }
 
     private void applyHead(Block block, BlockFace facing) {
-        block.setType(ItemStacks.resolveMaterial("PLAYER_HEAD", Material.PLAYER_HEAD), false);
+        block.setType(ItemStacks.resolveMaterial("PLAYER_HEAD", ItemStacks.resolveMaterial("SKULL_ITEM", Material.CHEST)));
         orient(block, facing);
         BlockState state = block.getState();
         if (!(state instanceof Skull)) {
@@ -76,20 +73,21 @@ public final class BlockStyle {
         if (cardinal == null) {
             return;
         }
-        BlockData data = block.getBlockData();
-        if (data instanceof Directional) {
-            Directional directional = (Directional) data;
-            BlockFace directionalFace = cardinalFour(cardinal);
-            if (directionalFace != null && directional.getFaces().contains(directionalFace)) {
-                directional.setFacing(directionalFace);
-                block.setBlockData(directional, false);
-            }
+        BlockState state = block.getState();
+        BlockFace directionalFace = cardinalFour(cardinal);
+        if (directionalFace == null) return;
+        try {
+            java.lang.reflect.Method setFacing = state.getClass().getMethod("setFacingDirection", BlockFace.class);
+            setFacing.invoke(state, directionalFace);
+            state.update(true, false);
             return;
+        } catch (Throwable ignored) {
         }
-        if (data instanceof Rotatable) {
-            Rotatable rotatable = (Rotatable) data;
-            rotatable.setRotation(cardinal);
-            block.setBlockData(rotatable, false);
+        try {
+            java.lang.reflect.Method setFacing = state.getClass().getMethod("setFacing", BlockFace.class);
+            setFacing.invoke(state, directionalFace);
+            state.update(true, false);
+        } catch (Throwable ignored) {
         }
     }
 

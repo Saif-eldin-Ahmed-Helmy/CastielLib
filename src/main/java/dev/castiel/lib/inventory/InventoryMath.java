@@ -5,6 +5,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +20,7 @@ public final class InventoryMath {
         }
         int remaining = amount;
         int maxStack = Math.max(1, sample.getMaxStackSize());
-        for (ItemStack content : inventory.getStorageContents()) {
+        for (ItemStack content : storageContents(inventory)) {
             if (content != null && content.isSimilar(sample)) {
                 remaining -= Math.max(0, maxStack - content.getAmount());
                 if (remaining <= 0) {
@@ -26,7 +28,7 @@ public final class InventoryMath {
                 }
             }
         }
-        for (ItemStack content : inventory.getStorageContents()) {
+        for (ItemStack content : storageContents(inventory)) {
             if (content == null || content.getType() == Material.AIR) {
                 remaining -= maxStack;
                 if (remaining <= 0) {
@@ -42,7 +44,7 @@ public final class InventoryMath {
         if (sample == null) {
             return count;
         }
-        for (ItemStack content : inventory.getStorageContents()) {
+        for (ItemStack content : storageContents(inventory)) {
             if (content != null && content.isSimilar(sample)) {
                 count += content.getAmount();
             }
@@ -55,7 +57,7 @@ public final class InventoryMath {
             return 0;
         }
         int remaining = amount;
-        ItemStack[] contents = inventory.getStorageContents();
+        ItemStack[] contents = storageContents(inventory);
         for (int i = 0; i < contents.length && remaining > 0; i++) {
             ItemStack content = contents[i];
             if (content == null || !content.isSimilar(sample)) {
@@ -68,7 +70,7 @@ public final class InventoryMath {
                 contents[i] = null;
             }
         }
-        inventory.setStorageContents(contents);
+        setStorageContents(inventory, contents);
         return amount - remaining;
     }
 
@@ -95,10 +97,10 @@ public final class InventoryMath {
     }
 
     public static boolean giveAtomic(PlayerInventory inventory, ItemStack sample, int amount) {
-        ItemStack[] backup = cloneContents(inventory.getStorageContents());
+        ItemStack[] backup = cloneContents(storageContents(inventory));
         Map<Integer, ItemStack> leftovers = give(inventory, sample, amount);
         if (!leftovers.isEmpty()) {
-            inventory.setStorageContents(backup);
+            setStorageContents(inventory, backup);
             return false;
         }
         return true;
@@ -120,5 +122,31 @@ public final class InventoryMath {
             clone[i] = contents[i] == null ? null : contents[i].clone();
         }
         return clone;
+    }
+
+    private static ItemStack[] storageContents(PlayerInventory inventory) {
+        try {
+            Method method = inventory.getClass().getMethod("getStorageContents");
+            return (ItemStack[]) method.invoke(inventory);
+        } catch (NoSuchMethodException e) {
+            return inventory.getContents();
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Cannot read player inventory storage.", e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException("Cannot read player inventory storage.", e.getCause());
+        }
+    }
+
+    private static void setStorageContents(PlayerInventory inventory, ItemStack[] contents) {
+        try {
+            Method method = inventory.getClass().getMethod("setStorageContents", ItemStack[].class);
+            method.invoke(inventory, new Object[]{contents});
+        } catch (NoSuchMethodException e) {
+            inventory.setContents(contents);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Cannot update player inventory storage.", e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException("Cannot update player inventory storage.", e.getCause());
+        }
     }
 }

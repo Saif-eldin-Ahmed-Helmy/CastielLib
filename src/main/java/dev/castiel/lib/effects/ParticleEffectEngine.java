@@ -1,14 +1,12 @@
 package dev.castiel.lib.effects;
 
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public final class ParticleEffectEngine {
@@ -71,15 +69,9 @@ public final class ParticleEffectEngine {
     }
 
     private void render(Target target) {
-        Particle primary = match(target.config.particle());
-        Particle secondary = match(target.config.secondaryParticle());
-        if (primary == null) {
-            primary = match("FLAME");
-        }
-        if (secondary == null) {
-            secondary = primary;
-        }
-        if (primary == null || target.center.getWorld() == null) {
+        String primary = normalize(target.config.particle(), "FLAME");
+        String secondary = normalize(target.config.secondaryParticle(), primary);
+        if (target.center.getWorld() == null) {
             return;
         }
         if (!isRenderable(target.center)) {
@@ -186,7 +178,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void circle(Location center, Particle particle, double radius, int points, double y, double phase) {
+    private void circle(Location center, String particle, double radius, int points, double y, double phase) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double angle = Math.PI * 2 * i / points + phase;
@@ -194,7 +186,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void spiral(Location center, Particle particle, double radius, double height, int points, double phase, int turns) {
+    private void spiral(Location center, String particle, double radius, double height, int points, double phase, int turns) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double progress = i / (double) Math.max(1, points - 1);
@@ -203,7 +195,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void ladder(Location center, Particle particle, double radius, double height, int bars, double phase) {
+    private void ladder(Location center, String particle, double radius, double height, int bars, double phase) {
         World world = center.getWorld();
         for (int i = 0; i < bars; i++) {
             double progress = i / (double) Math.max(1, bars - 1);
@@ -213,7 +205,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void vortex(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void vortex(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double progress = i / (double) points;
@@ -223,7 +215,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void fountain(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void fountain(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double angle = Math.PI * 2 * i / points + tick * 0.04;
@@ -232,7 +224,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void orbit(Location center, Particle primary, Particle secondary, double radius, double height) {
+    private void orbit(Location center, String primary, String secondary, double radius, double height) {
         World world = center.getWorld();
         for (int i = 0; i < 4; i++) {
             double angle = tick * 0.12 + i * Math.PI / 2;
@@ -241,13 +233,13 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void galaxy(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void galaxy(Location center, String primary, String secondary, double radius, double height, int points) {
         circle(center, primary, radius, points, height * 0.45, tick * 0.04);
         spiral(center, secondary, radius * 0.8, height, Math.max(8, points / 2), tick * 0.09, 2);
         orbit(center, primary, secondary, radius * 0.55, height);
     }
 
-    private void crown(Location center, Particle primary, Particle secondary, double radius, int points) {
+    private void crown(Location center, String primary, String secondary, double radius, int points) {
         circle(center, primary, radius, points, 1.15, tick * 0.025);
         World world = center.getWorld();
         for (int i = 0; i < 8; i++) {
@@ -256,7 +248,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void beacon(Location center, Particle primary, Particle secondary, double height, int points) {
+    private void beacon(Location center, String primary, String secondary, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double y = i * height / points;
@@ -265,7 +257,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void comet(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void comet(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         double head = tick * 0.12;
         for (int i = 0; i < points; i++) {
@@ -276,12 +268,12 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void pulse(Location center, Particle primary, Particle secondary, double radius, int points) {
+    private void pulse(Location center, String primary, String secondary, double radius, int points) {
         double pulse = (Math.sin(tick * 0.12) + 1) / 2;
         circle(center, pulse > 0.65 ? secondary : primary, radius * (0.45 + pulse * 0.65), points, 0.75, 0);
     }
 
-    private void aurora(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void aurora(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double x = -radius + (radius * 2 * i / Math.max(1, points - 1));
@@ -291,7 +283,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void star(Location center, Particle primary, Particle secondary, double radius, int points) {
+    private void star(Location center, String primary, String secondary, double radius, int points) {
         World world = center.getWorld();
         for (int i = 0; i < 5; i++) {
             double a1 = tick * 0.035 + i * Math.PI * 2 / 5;
@@ -303,7 +295,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void heart(Location center, Particle particle, double radius, int points) {
+    private void heart(Location center, String particle, double radius, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double t = Math.PI * 2 * i / points;
@@ -313,7 +305,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void cube(Location center, Particle primary, Particle secondary, double radius, double height) {
+    private void cube(Location center, String primary, String secondary, double radius, double height) {
         World world = center.getWorld();
         int steps = 8;
         double y1 = 0.35;
@@ -331,7 +323,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void pyramid(Location center, Particle primary, Particle secondary, double radius, double height) {
+    private void pyramid(Location center, String primary, String secondary, double radius, double height) {
         World world = center.getWorld();
         int steps = 12;
         for (int i = 0; i <= steps; i++) {
@@ -344,7 +336,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void nova(Location center, Particle primary, Particle secondary, double radius, int points) {
+    private void nova(Location center, String primary, String secondary, double radius, int points) {
         World world = center.getWorld();
         double pulse = 0.25 + ((tick % 24) / 24.0) * radius;
         for (int i = 0; i < points; i++) {
@@ -355,7 +347,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void rain(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void rain(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double angle = i * 2.399963 + tick * 0.01;
@@ -365,12 +357,12 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void snowglobe(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void snowglobe(Location center, String primary, String secondary, double radius, double height, int points) {
         nova(center, primary, secondary, radius, Math.max(8, points / 2));
         circle(center, secondary, radius, Math.max(12, points / 2), height * 0.5, -tick * 0.02);
     }
 
-    private void portal(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void portal(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double angle = tick * 0.08 + i * Math.PI * 2 / points;
@@ -379,7 +371,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void enchanted(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void enchanted(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double angle = i * 2.399963 + tick * 0.035;
@@ -388,7 +380,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void totemBurst(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void totemBurst(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         double stage = (tick % 20) / 20.0;
         for (int i = 0; i < points; i++) {
@@ -397,7 +389,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void drip(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void drip(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double angle = i * 2.399963;
@@ -406,7 +398,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void wave(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void wave(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         for (int i = 0; i < points; i++) {
             double angle = Math.PI * 2 * i / points;
@@ -415,7 +407,7 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void firework(Location center, Particle primary, Particle secondary, double radius, double height, int points) {
+    private void firework(Location center, String primary, String secondary, double radius, double height, int points) {
         World world = center.getWorld();
         double stage = (tick % 18) / 18.0;
         for (int i = 0; i < points; i++) {
@@ -426,14 +418,11 @@ public final class ParticleEffectEngine {
         }
     }
 
-    private void spawn(World world, Location center, Particle particle, double x, double y, double z, int count, double ox, double oy, double oz, double extra) {
+    private void spawn(World world, Location center, String particle, double x, double y, double z, int count, double ox, double oy, double oz, double extra) {
         if (world == null || particle == null) {
             return;
         }
-        try {
-            world.spawnParticle(particle, center.getX() + x, center.getY() + y, center.getZ() + z, count, ox, oy, oz, extra);
-        } catch (Throwable ignored) {
-        }
+        ParticleSpawner.spawn(world, center.clone().add(x, y, z), particle, count, ox, oy, oz, extra);
     }
 
     private boolean isRenderable(Location center) {
@@ -450,29 +439,11 @@ public final class ParticleEffectEngine {
         return false;
     }
 
-    private Particle match(String raw) {
-        String normalized = raw == null ? "" : raw.trim().replace('-', '_').replace(' ', '_').toUpperCase(Locale.ROOT);
-        if ("ENCHANT".equals(normalized) || "ENCHANTED".equals(normalized)) {
-            normalized = "ENCHANTMENT_TABLE";
-        } else if ("DUST".equals(normalized)) {
-            normalized = "REDSTONE";
-        } else if ("WITCH".equals(normalized)) {
-            normalized = "SPELL_WITCH";
-        } else if ("FIREWORK".equals(normalized)) {
-            normalized = "FIREWORKS_SPARK";
+    private String normalize(String raw, String fallback) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return fallback;
         }
-        try {
-            return Particle.valueOf(normalized);
-        } catch (IllegalArgumentException ignored) {
-            if ("FIREWORKS_SPARK".equals(normalized)) {
-                try {
-                    return Particle.valueOf("FIREWORK");
-                } catch (IllegalArgumentException ignoredAgain) {
-                    return null;
-                }
-            }
-            return null;
-        }
+        return ParticleSpawner.normalize(raw);
     }
 
     private static final class Target {

@@ -14,3 +14,20 @@ Holograms can be updated in place by forcing a respawn under the same id:
 ```java
 lib.holograms().show("boss:live", location, options, placeholders, true);
 ```
+## Java 8 and HologramsAPI
+
+CastielLib is compiled with `--release 8`. The build may use a newer toolchain
+to resolve the newest Paper API variant, but `verifyJava8Bytecode` rejects any
+class file newer than Java 8 bytecode.
+
+Consumers should use `HologramsAPI` and never import a provider API directly:
+
+```java
+library.hologramsApi().configure("auto"); // fancy, decent, then native
+library.hologramsApi().show(id, new HologramDisplay(location, lines, item, 0.7));
+library.hologramsApi().remove(id);
+```
+
+Supported modes are `auto`, `fancy`, `decent`, `native`, and `disabled`.
+DecentHolograms and FancyHolograms are discovered reflectively, so absent or
+unsupported providers do not prevent the consuming plugin from starting.

@@ -5,12 +5,10 @@ import dev.castiel.lib.util.Placeholders;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -233,8 +231,8 @@ public final class ConfigItem {
                 meta.addItemFlags(ItemFlag.values());
             }
             if (unbreakable) {
-                try {
-                    meta.setUnbreakable(true);
+            try {
+                meta.getClass().getMethod("setUnbreakable", boolean.class).invoke(meta, Boolean.TRUE);
                 } catch (Throwable ignored) {
                 }
             }
@@ -368,12 +366,15 @@ public final class ConfigItem {
     }
 
     private static void applyDamage(ItemMeta meta, Material material, int damage) {
-        if (!(meta instanceof Damageable) || material == null || damage <= 0) {
+        if (meta == null || material == null || damage <= 0) {
             return;
         }
         short maxDurability = material.getMaxDurability();
         int safeDamage = maxDurability > 0 ? Math.min(damage, maxDurability) : damage;
-        ((Damageable) meta).setDamage(safeDamage);
+        try {
+            meta.getClass().getMethod("setDamage", int.class).invoke(meta, Integer.valueOf(safeDamage));
+        } catch (Throwable ignored) {
+        }
     }
 
     private static void applyEnchantments(ItemMeta meta, List<String> rawEnchantments) {
@@ -404,13 +405,6 @@ public final class ConfigItem {
         String normalized = raw.trim().toLowerCase(Locale.ROOT);
         if (normalized.startsWith("minecraft:")) {
             normalized = normalized.substring("minecraft:".length());
-        }
-        try {
-            Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(normalized));
-            if (enchantment != null) {
-                return enchantment;
-            }
-        } catch (Throwable ignored) {
         }
         return Enchantment.getByName(normalized.toUpperCase(Locale.ROOT));
     }
@@ -491,13 +485,6 @@ public final class ConfigItem {
     @SuppressWarnings("deprecation")
     private static Enchantment glowEnchantment() {
         Enchantment enchantment = null;
-        try {
-            enchantment = Enchantment.getByKey(NamespacedKey.minecraft("unbreaking"));
-        } catch (Throwable ignored) {
-        }
-        if (enchantment != null) {
-            return enchantment;
-        }
         try {
             enchantment = Enchantment.getByName("UNBREAKING");
         } catch (Throwable ignored) {

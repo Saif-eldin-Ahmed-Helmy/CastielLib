@@ -3,7 +3,6 @@ package dev.castiel.lib.world;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
@@ -158,9 +157,12 @@ public final class Locations {
         }
         if (value.indexOf(':') >= 0) {
             try {
-                World byKey = Bukkit.getWorld(NamespacedKey.fromString(value));
-                if (byKey != null) {
-                    return byKey;
+                Class<?> keyType = Class.forName("org.bukkit.NamespacedKey");
+                Object key = keyType.getMethod("fromString", String.class).invoke(null, value);
+                Method getWorld = Bukkit.class.getMethod("getWorld", keyType);
+                Object byKey = getWorld.invoke(null, key);
+                if (byKey instanceof World) {
+                    return (World) byKey;
                 }
             } catch (Throwable ignored) {
             }

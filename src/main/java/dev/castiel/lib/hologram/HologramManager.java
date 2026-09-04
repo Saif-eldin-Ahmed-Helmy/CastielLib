@@ -22,11 +22,17 @@ public final class HologramManager implements Listener {
     private final JavaPlugin plugin;
     private final Map<String, Hologram> holograms = new LinkedHashMap<String, Hologram>();
     private final Map<String, Record> records = new LinkedHashMap<String, Record>();
-    private final BukkitTask refreshTask;
+    private BukkitTask refreshTask;
 
     public HologramManager(JavaPlugin plugin) {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    private void ensureRefreshTask() {
+        if (refreshTask != null && !refreshTask.isCancelled()) {
+            return;
+        }
         this.refreshTask = plugin.getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
             @Override
             public void run() {
@@ -40,12 +46,19 @@ public final class HologramManager implements Listener {
     }
 
     public Hologram show(String id, Location base, HologramOptions options, Placeholders placeholders, boolean force) {
-        records.put(id, new Record(base == null ? null : base.clone(), options, placeholders == null ? Placeholders.empty() : placeholders));
+        return show(id, base, options, placeholders, null, force);
+    }
+
+    public Hologram show(String id, Location base, HologramOptions options, Placeholders placeholders,
+                         HologramItem item, boolean force) {
+        records.put(id, new Record(base == null ? null : base.clone(), options,
+                placeholders == null ? Placeholders.empty() : placeholders, item));
         Hologram hologram = holograms.get(id);
         if (hologram == null) {
             hologram = new Hologram(plugin, id);
             holograms.put(id, hologram);
         }
+        ensureRefreshTask();
         refresh(id, force);
         return hologram;
     }
@@ -56,9 +69,17 @@ public final class HologramManager implements Listener {
         if (hologram != null) {
             hologram.remove();
         }
+        if (holograms.isEmpty() && records.isEmpty() && refreshTask != null) {
+            refreshTask.cancel();
+            refreshTask = null;
+        }
     }
 
     public void clear() {
+        if (refreshTask != null) {
+            refreshTask.cancel();
+            refreshTask = null;
+        }
         for (Hologram hologram : holograms.values()) {
             hologram.remove();
         }
@@ -67,12 +88,14 @@ public final class HologramManager implements Listener {
     }
 
     public void shutdown() {
-        refreshTask.cancel();
         clear();
     }
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent event) {
+        if (records.isEmpty()) {
+            return;
+        }
         final Chunk chunk = event.getChunk();
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
@@ -84,11 +107,17 @@ public final class HologramManager implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        if (records.isEmpty()) {
+            return;
+        }
         scheduleRefreshNear(event.getPlayer().getLocation(), false);
     }
 
     @EventHandler
     public void onTeleport(PlayerTeleportEvent event) {
+        if (records.isEmpty()) {
+            return;
+        }
         if (event.getTo() != null) {
             scheduleRefreshNear(event.getTo(), false);
         }
@@ -96,10 +125,16 @@ public final class HologramManager implements Listener {
 
     @EventHandler
     public void onChangedWorld(PlayerChangedWorldEvent event) {
+        if (records.isEmpty()) {
+            return;
+        }
         scheduleRefreshNear(event.getPlayer().getLocation(), false);
     }
 
     private void scheduleRefreshNear(final Location location, final boolean force) {
+        if (records.isEmpty()) {
+            return;
+        }
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
             public void run() {
@@ -163,7 +198,7 @@ public final class HologramManager implements Listener {
             return;
         }
         if (force || !hologram.hasLiveEntities()) {
-            hologram.spawn(record.base, record.options, record.placeholders);
+            hologram.spawn(record.base, record.options, record.placeholders, record.item);
         }
     }
 
@@ -194,11 +229,13 @@ public final class HologramManager implements Listener {
         private final Location base;
         private final HologramOptions options;
         private final Placeholders placeholders;
+        private final HologramItem item;
 
-        private Record(Location base, HologramOptions options, Placeholders placeholders) {
+        private Record(Location base, HologramOptions options, Placeholders placeholders, HologramItem item) {
             this.base = base;
             this.options = options;
             this.placeholders = placeholders;
+            this.item = item;
         }
     }
 }
