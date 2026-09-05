@@ -16,6 +16,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public final class DatabaseManager implements AutoCloseable {
+    private static final String SQLITE_DRIVER = "org.sqlite.JDBC";
     private final JavaPlugin plugin;
     private final HikariDataSource source;
     private final PendingOperations operations = new PendingOperations();
@@ -24,7 +25,19 @@ public final class DatabaseManager implements AutoCloseable {
         this.plugin = plugin;
         HikariConfig config = new HikariConfig();
         if (settings.type == DatabaseSettings.Type.SQLITE) {
+            prepareSqliteFile(settings.sqliteFile);
             config.setJdbcUrl("jdbc:sqlite:" + settings.sqliteFile.getAbsolutePath());
+            // Named explicitly rather than left to DriverManager/ServiceLoader
+            // discovery: the bundled driver lives in this plugin's own
+            // classloader, which the JDBC service lookup performed by Hikari
+            // does not necessarily search. Without this the pool fails with
+            // "No suitable driver" and the plugin cannot enable at all.
+            config.setDriverClassName(SQLITE_DRIVER);
+            // Forces Hikari's query-based liveness check instead of
+            // Connection.isValid(), which pre-3.8 SQLite drivers leave
+            // abstract. Costs nothing on a modern driver and keeps an
+            // unexpected one from aborting pool startup outright.
+            config.setConnectionTestQuery("SELECT 1");
             config.setMaximumPoolSize(1);
         } else {
             config.setJdbcUrl("jdbc:mysql://" + settings.host + ":" + settings.port + "/" + settings.database + "?useSSL=false&autoReconnect=true");
@@ -135,6 +148,20 @@ public final class DatabaseManager implements AutoCloseable {
     @Override
     public void close() {
         close(5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Creates the parent directory of a SQLite file before Hikari opens the
+     * pool. A plugin's data folder does not exist on a first run until
+     * something writes to it, and SQLite reports the resulting failure as an
+     * opaque connection error rather than a missing-directory one.
+     */
+    private static void prepareSqliteFile(java.io.File file) {
+        if (file == null) return;
+        java.io.File parent = file.getAbsoluteFile().getParentFile();
+        if (parent != null && !parent.isDirectory() && !parent.mkdirs() && !parent.isDirectory()) {
+            throw new IllegalStateException("Unable to create database directory: " + parent);
+        }
     }
 
     private void schedule(CompletableFuture<?> future, Runnable operation) {
