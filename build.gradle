@@ -27,6 +27,11 @@ dependencies {
     compileOnly "io.papermc.paper:paper-api:26.2.build.62-beta"
     implementation "org.yaml:snakeyaml:2.6"
     api "com.zaxxer:HikariCP:4.0.3"
+    // Bundled so a plugin using DatabaseSettings.sqlite() actually has a driver:
+    // no Bukkit/Paper line on the 1.8.8-1.21.x range reliably provides one, and a
+    // plugin classloader cannot see another plugin's. 3.45.3.0 is the last line
+    // still targeting Java 8, which the 1.8.8 lane requires.
+    api "org.xerial:sqlite-jdbc:3.45.3.0"
     api "com.github.cryptomorin:XSeries:13.7.1"
     testImplementation "io.papermc.paper:paper-api:26.2.build.62-beta"
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
