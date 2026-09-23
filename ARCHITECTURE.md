@@ -24,7 +24,7 @@ Modules:
 
 Compatibility strategy:
 
-- Compile against Paper 1.16.5 API for a broad midpoint API.
+- Compile against Paper API `26.2.build.62-beta` with a JDK 25 toolchain while emitting Java 8 bytecode; test Spigot 1.8.8 linkage separately.
 - Resolve modern APIs like custom model data and action bars reflectively.
 - Use XSeries at runtime for cross-version material/sound parsing, falling back to Bukkit enums when needed.
 - Avoid raw threads; async work uses Bukkit scheduler.
