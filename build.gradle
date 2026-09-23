@@ -17,6 +17,11 @@ dependencies {
     compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
     api "com.zaxxer:HikariCP:4.0.3"
     api "com.github.cryptomorin:XSeries:13.7.0"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.5"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 configurations.configureEach {

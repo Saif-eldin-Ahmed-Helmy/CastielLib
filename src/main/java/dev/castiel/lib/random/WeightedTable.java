@@ -55,7 +55,9 @@ public final class WeightedTable<T> {
         WeightedTable<T> table = new WeightedTable<T>();
         if (values != null) {
             for (T value : values) {
-                table.add(value, value.weight());
+                if (value != null) {
+                    table.add(value, value.weight());
+                }
             }
         }
         return table;

@@ -40,7 +40,7 @@ public final class DatabaseManager implements AutoCloseable {
                     binder.accept(statement);
                 }
                 future.complete(statement.executeUpdate());
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 future.completeExceptionally(e);
             }
         });
@@ -61,7 +61,7 @@ public final class DatabaseManager implements AutoCloseable {
                     }
                     future.complete(mapped);
                 }
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 future.completeExceptionally(e);
             }
         });
