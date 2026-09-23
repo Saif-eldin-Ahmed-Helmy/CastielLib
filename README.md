@@ -2,7 +2,7 @@
 
 CastielLib is a Gradle-built Java utility library for Paper/Spigot plugin development. It packages the repeated boilerplate used across modern Minecraft plugins into one reusable foundation: commands, config loading, colors, actions, inventories, items, sounds, database access, holograms, particle effects, permissions, requirements, weighted rolls, time formatting, inventory math, and location serialization.
 
-The library is designed for plugin code that needs to stay practical across older and newer server APIs. It compiles against Paper `1.16.5`, targets Java 8 bytecode, uses XSeries for cross-version names where useful, and uses reflection for newer APIs such as custom model data, TextDisplay holograms, and display transformations.
+The library is designed for plugin code that needs to stay practical across older and newer server APIs. It compiles against Paper `26.2.build.62-beta`, targets Java 8 bytecode, uses XSeries for cross-version names where useful, and uses reflection for newer APIs such as custom model data, TextDisplay holograms, and display transformations.
 
 ## Features
 
@@ -11,18 +11,20 @@ The library is designed for plugin code that needs to stay practical across olde
 - Initializable global no-permission message for all `@Permission` checks.
 - Annotation-backed YAML config loading with automatic missing-key insertion.
 - HikariCP-backed SQLite/MySQL access with all work scheduled asynchronously through Bukkit.
-- Iridium-style colors: legacy codes, hex, `<SOLID>`, `<GRADIENT>`, and `<RAINBOW>`.
+- CastielLib colors: legacy codes, hex, `<SOLID>`, `<GRADIENT>`, and `<RAINBOW>`.
 - Config action parser for commands, messages, broadcasts, titles, action bars, sounds, particles, and custom tags.
 - YAML inventory parser plus programmatic managed and paginated menus.
 - Configurable item stacks with XSeries material parsing, custom model data, lore, glow, and base64/url player heads.
 - XSeries-backed sound helper.
 - Holograms using TextDisplay when available and ArmorStand fallback otherwise.
+- Vanilla model loading for Display-entity props/mobs with explicit ArmorStand fallback on old servers.
 - Scheduled particle effect engine with many built-in shapes/styles.
 - Utility packages for permissions, requirements, weighted random selection, time, inventory math, slots, block styles, and location keys.
 
 ## Requirements
 
-- Java 8-compatible runtime target.
+- JDK 25 toolchain for building (provisioned by Gradle); a supported JDK to launch the wrapper.
+- Java 8 bytecode output.
 - Gradle wrapper included.
 - Paper/Spigot plugin project.
 - XSeries and HikariCP are declared as Gradle API dependencies.
@@ -47,32 +49,9 @@ build/libs/CastielLib-1.0.0.jar
 
 ## Gradle
 
-CastielLib itself uses:
+See [build.gradle](build.gradle) for dependencies and toolchain configuration. The build runs JUnit tests, checks Java 8 bytecode, and tests selected linkage against Spigot 1.8.8. Live server rendering and database integration still require testing in the consuming plugin.
 
-```groovy
-plugins {
-    id "java-library"
-    id "com.gradleup.shadow" version "8.3.6"
-}
-
-group = "dev.castiel"
-version = "1.0.0"
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-    withSourcesJar()
-    withJavadocJar()
-}
-
-dependencies {
-    compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
-    api "com.zaxxer:HikariCP:4.0.3"
-    api "com.github.cryptomorin:XSeries:13.7.0"
-}
-```
-
-If you use the built jar directly inside a plugin, put it on your compile classpath and shade it into the plugin jar, or load it as a separate plugin/library depending on your server architecture.
+Shade the built library into your plugin. CastielLib is not a standalone Bukkit plugin.
 
 Example plugin-side shadow setup:
 
@@ -128,6 +107,7 @@ lib.inventories(); // InventoryManager
 lib.commands();    // CommandRegistry
 lib.particles();   // ParticleEffectEngine
 lib.holograms();   // HologramManager
+lib.models();      // VanillaModelManager
 lib.database();    // DatabaseManager after configuration
 ```
 
@@ -399,7 +379,7 @@ Supported syntax:
 - `<GRADIENT:FROM>text</GRADIENT:TO>`.
 - `<RAINBOW>text</RAINBOW>`.
 - `<RAINBOW:0.75>text</RAINBOW>`.
-- Iridium-style `<RAINBOW75>text</RAINBOW>` saturation.
+- Percentage-style `<RAINBOW75>text</RAINBOW>` saturation.
 
 Named colors include:
 
@@ -1151,6 +1131,7 @@ Additional module docs are available in `docs/`:
 - `docs/COMMANDS.md`
 - `docs/INVENTORIES.md`
 - `docs/ITEMS_HOLOGRAMS_PARTICLES.md`
+- `docs/MODELS.md`
 - `docs/UTILITIES.md`
 - `ARCHITECTURE.md`
 

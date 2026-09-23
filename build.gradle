@@ -1,41 +1,103 @@
+import org.gradle.api.attributes.Attribute
+
 plugins {
     id "java-library"
-    id "com.gradleup.shadow" version "8.3.6"
+    id "com.gradleup.shadow" version "9.6.0"
 }
 
 group = "dev.castiel"
 version = "1.0.0"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
     withSourcesJar()
     withJavadocJar()
 }
 
-dependencies {
-    compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
-    api "com.zaxxer:HikariCP:4.0.3"
-    api "com.github.cryptomorin:XSeries:13.7.0"
-    testImplementation "org.junit.jupiter:junit-jupiter:5.10.5"
+configurations {
+    spigot18Linkage {
+        canBeConsumed = false
+        extendsFrom implementation, runtimeOnly
+    }
 }
 
-test {
-    useJUnitPlatform()
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:26.2.build.62-beta"
+    implementation "org.yaml:snakeyaml:2.6"
+    api "com.zaxxer:HikariCP:4.0.3"
+    // Bundled so a plugin using DatabaseSettings.sqlite() actually has a driver:
+    // no Bukkit/Paper line on the 1.8.8-1.21.x range reliably provides one, and a
+    // plugin classloader cannot see another plugin's. 3.45.3.0 is the last line
+    // still targeting Java 8, which the 1.8.8 lane requires.
+    api "org.xerial:sqlite-jdbc:3.45.3.0"
+    api "com.github.cryptomorin:XSeries:13.7.1"
+    testImplementation "io.papermc.paper:paper-api:26.2.build.62-beta"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    spigot18Linkage "org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT"
 }
 
 configurations.configureEach {
-    resolutionStrategy.force "com.github.cryptomorin:XSeries:13.7.0"
+    resolutionStrategy.force "com.github.cryptomorin:XSeries:13.7.1"
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    if (JavaVersion.current().isJava9Compatible()) {
-        options.release.set(8)
+    options.release.set(8)
+}
+
+configurations.named("compileClasspath") {
+    attributes {
+        attribute(Attribute.of("org.gradle.jvm.version", Integer), 25)
     }
+}
+
+configurations.named("testCompileClasspath") {
+    attributes {
+        attribute(Attribute.of("org.gradle.jvm.version", Integer), 25)
+    }
+}
+
+configurations.named("testRuntimeClasspath") {
+    attributes {
+        attribute(Attribute.of("org.gradle.jvm.version", Integer), 25)
+    }
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty "castiellib.main.classes", sourceSets.main.output.classesDirs.asPath
+    systemProperty "castiellib.spigot18.classpath", configurations.spigot18Linkage.asPath
+}
+
+tasks.register("verifyJava8Bytecode") {
+    dependsOn tasks.named("classes"), tasks.named("testClasses")
+    doLast {
+        FileCollection outputs = files(sourceSets.main.output.classesDirs, sourceSets.test.output.classesDirs)
+        outputs.asFileTree.matching { include "**/*.class" }.files.each { File classFile ->
+            byte[] header = classFile.bytes
+            if (header.length >= 8) {
+                int major = ((header[6] & 0xff) << 8) | (header[7] & 0xff)
+                if (major > 52) {
+                    throw new GradleException("Java 8 bytecode check failed for ${classFile}: major ${major}")
+                }
+            }
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("verifyJava8Bytecode")
+}
+
+jar {
+    archiveClassifier.set("plain")
 }
 
 shadowJar {
     archiveClassifier.set("")
     relocate "com.zaxxer.hikari", "dev.castiel.lib.libs.hikari"
+    relocate "org.yaml.snakeyaml", "dev.castiel.lib.libs.snakeyaml"
 }

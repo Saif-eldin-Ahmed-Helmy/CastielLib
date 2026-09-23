@@ -69,7 +69,7 @@ public final class ItemStacks {
     }
 
     public static ItemStack playerHead(String texture, int amount) {
-        ItemStack stack = new ItemStack(resolveMaterial("PLAYER_HEAD", Material.PLAYER_HEAD), Math.max(1, amount));
+        ItemStack stack = new ItemStack(resolveMaterial("PLAYER_HEAD", resolveMaterial("SKULL_ITEM", Material.STONE)), Math.max(1, amount));
         ItemMeta meta = stack.getItemMeta();
         if (meta instanceof SkullMeta) {
             applyTexture((SkullMeta) meta, normalizeTexture(texture));
